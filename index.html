@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Study abroad intake</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16251F;
+  --ink-soft:#4A5B53;
+  --paper:#F3F5F1;
+  --card:#FFFFFF;
+  --line:#D6DDD6;
+  --green:#1C6B48;
+  --green-soft:#E4EFE7;
+  --gold:#A8762A;
+  --gold-soft:#F6EEDF;
+  --red:#92341F;
+  --red-soft:#F8E7E1;
+  --focus:#1C6B48;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#E8EFE9; --ink-soft:#A3B3A9; --paper:#101713; --card:#18211C;
+    --line:#2C3A32; --green:#6FBF93; --green-soft:#1A2E23;
+    --gold:#D7A758; --gold-soft:#2C2419; --red:#E0907A; --red-soft:#30201C;
+    --focus:#6FBF93;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#E8EFE9; --ink-soft:#A3B3A9; --paper:#101713; --card:#18211C;
+  --line:#2C3A32; --green:#6FBF93; --green-soft:#1A2E23;
+  --gold:#D7A758; --gold-soft:#2C2419; --red:#E0907A; --red-soft:#30201C;
+  --focus:#6FBF93;
+}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:16px; line-height:1.55;
+}
+.wrap{max-width:40rem;margin:0 auto;padding:1.25rem 1.1rem 5rem}
+h1,h2,h3{font-family:Newsreader,Georgia,"Times New Roman",serif;font-weight:500;line-height:1.2;margin:0}
+h1{font-size:2.1rem;letter-spacing:-0.01em}
+h2{font-size:1.5rem;margin-bottom:.35rem}
+h3{font-size:1.15rem;font-weight:600}
+p{margin:.5rem 0}
+a{color:var(--green)}
+.lede{color:var(--ink-soft);font-size:1.02rem}
+.muted{color:var(--ink-soft);font-size:.9rem}
+
+/* progress */
+.bar{display:flex;gap:3px;margin:1.1rem 0 1.4rem}
+.bar i{flex:1;height:3px;background:var(--line);border-radius:2px;transition:background .2s}
+.bar i.done{background:var(--green)}
+.step-label{font-size:.82rem;color:var(--ink-soft);margin-bottom:.9rem;font-variant-numeric:tabular-nums}
+
+/* panel */
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:1.3rem 1.15rem}
+fieldset{border:0;margin:0;padding:0}
+legend{padding:0}
+
+/* fields */
+.f{margin:1.15rem 0 0}
+.f:first-of-type{margin-top:1rem}
+label.q{display:block;font-weight:500;margin-bottom:.1rem}
+.hint{display:block;color:var(--ink-soft);font-size:.86rem;margin-bottom:.45rem}
+input[type=text],input[type=number],input[type=email],select,textarea{
+  width:100%;padding:.6rem .7rem;font:inherit;font-size:16px;color:var(--ink);
+  background:var(--paper);border:1px solid var(--line);border-radius:7px;
+}
+textarea{min-height:4.5rem;resize:vertical}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--ink-soft) 50%),linear-gradient(135deg,var(--ink-soft) 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:2.2rem}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,.chip:focus-within{
+  outline:2px solid var(--focus);outline-offset:2px
+}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.1rem}
+.chip{position:relative;display:inline-flex}
+.chip input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.chip span{padding:.42rem .75rem;border:1px solid var(--line);border-radius:999px;font-size:.92rem;background:var(--card);cursor:pointer}
+.chip input:checked + span{background:var(--green-soft);border-color:var(--green);color:var(--green);font-weight:500}
+
+/* nav */
+.nav{display:flex;gap:.6rem;margin-top:1.6rem;align-items:center}
+button{font:inherit;cursor:pointer;border-radius:7px;border:1px solid transparent;padding:.65rem 1.1rem}
+.primary{background:var(--green);color:#fff;font-weight:500;border-color:var(--green)}
+:root[data-theme="dark"] .primary,
+:root:not([data-theme="light"]) .primary{color:#0C1611}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .primary{color:#fff}}
+.ghost{background:transparent;color:var(--ink-soft);border-color:var(--line)}
+.spacer{flex:1}
+
+/* results */
+.verdict{border:1px solid var(--line);border-left-width:4px;border-radius:8px;padding:.85rem .95rem;margin:.6rem 0}
+.verdict.yes{border-left-color:var(--green);background:var(--green-soft)}
+.verdict.maybe{border-left-color:var(--gold);background:var(--gold-soft)}
+.verdict.no{border-left-color:var(--line)}
+.verdict h3{font-size:1.02rem;font-family:"IBM Plex Sans",sans-serif;font-weight:600;display:flex;justify-content:space-between;gap:.6rem;align-items:baseline}
+.tag{font-size:.74rem;font-weight:600;letter-spacing:.02em;padding:.12rem .5rem;border-radius:999px;white-space:nowrap}
+.tag.yes{background:var(--green);color:var(--card)}
+.tag.maybe{background:var(--gold);color:var(--card)}
+.tag.no{background:var(--line);color:var(--ink-soft)}
+.verdict p{margin:.35rem 0 0;font-size:.93rem;color:var(--ink-soft)}
+.verdict a{font-size:.88rem}
+.alert{border-radius:8px;padding:.9rem 1rem;margin:1rem 0;font-size:.95rem}
+.alert.warn{background:var(--red-soft);border:1px solid var(--red)}
+.alert.note{background:var(--gold-soft);border:1px solid var(--gold)}
+.alert h3{font-size:1rem;font-family:"IBM Plex Sans",sans-serif;font-weight:600;margin-bottom:.25rem}
+ul.check{list-style:none;padding:0;margin:.5rem 0}
+ul.check li{padding:.45rem 0 .45rem 1.6rem;border-bottom:1px solid var(--line);position:relative;font-size:.95rem}
+ul.check li:last-child{border-bottom:0}
+ul.check li::before{content:"";position:absolute;left:0;top:.78rem;width:.72rem;height:.72rem;border-radius:3px;border:1.5px solid var(--line)}
+ul.check li.ok::before{background:var(--green);border-color:var(--green)}
+ul.check li.todo::before{border-color:var(--gold);background:var(--gold-soft)}
+.sect{margin-top:2rem}
+.sect > h2{border-bottom:1px solid var(--line);padding-bottom:.4rem;margin-bottom:.8rem}
+pre.summary{white-space:pre-wrap;word-break:break-word;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:.9rem;font-size:.8rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;max-height:16rem;overflow:auto}
+.err{color:var(--red);font-size:.88rem;margin-top:.5rem}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(1.2rem + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--paper);padding:.6rem 1rem;border-radius:999px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+@media print{.nav,.bar,.step-label,.noprint{display:none!important}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="app"></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+const KEY = "sa-intake-draft-v1";
+const D = {};          // answers
+let step = 0;
+
+/* ---------- questions ---------- */
+const STEPS = [
+  {
+    title: "Before you start",
+    intro: "This takes about ten minutes. It works out which funded scholarships you can actually apply for, what is standing in your way, and what to do first. At the end you get a summary to send to Elvis, who does the school-by-school research.",
+    note: "Rough answers are fine. If you are unsure of something, choose the closest option and say so at the end.",
+    fields: []
+  },
+  {
+    title: "About you",
+    fields: [
+      {k:"name", t:"text", q:"Your full name", req:true},
+      {k:"contact", t:"text", q:"WhatsApp number or email", hint:"So Elvis can send the results back to you."},
+      {k:"citizenship", t:"text", q:"Country of citizenship", def:"Ghana", req:true},
+      {k:"passport", t:"select", q:"Passport", opts:[
+        ["valid2y","Valid for more than 2 years"],
+        ["valid1y","Valid for 1 to 2 years"],
+        ["soon","Expires within a year"],
+        ["none","I do not have one yet"]]},
+    ]
+  },
+  {
+    title: "What you have studied",
+    fields: [
+      {k:"held", t:"select", q:"Highest qualification you have completed", req:true, opts:[
+        ["wassce","WASSCE / SSSCE only"],
+        ["diploma","Diploma or HND"],
+        ["bachelor","Bachelor's degree (BSc, BA, BEd)"],
+        ["masters","Master's degree"]]},
+      {k:"heldField", t:"text", q:"What was it in?", hint:"For example Nursing, Computer Science, Accounting.", req:true},
+      {k:"heldInst", t:"text", q:"Institution"},
+      {k:"heldYear", t:"text", q:"Year completed", hint:"Or the year you expect to finish."},
+      {k:"grade", t:"select", q:"Final grade or class", opts:[
+        ["first","First Class"],
+        ["upper","Second Class Upper (2:1)"],
+        ["lower","Second Class Lower (2:2)"],
+        ["third","Third Class or Pass"],
+        ["distinction","Distinction (diploma / HND)"],
+        ["credit","Credit (diploma / HND)"],
+        ["pass","Pass (diploma / HND)"],
+        ["unknown","Not sure / still studying"]]},
+      {k:"cgpa", t:"text", q:"CGPA, if you know it", hint:"For example 3.2/4.0. Leave blank if unsure."},
+      {k:"wassce", t:"text", q:"WASSCE aggregate, if you have it", hint:"For example aggregate 12. Matters most for bachelor's applications."}
+    ]
+  },
+  {
+    title: "What you want to study",
+    fields: [
+      {k:"wantLevel", t:"select", q:"What level are you aiming for?", req:true, opts:[
+        ["bsc","Bachelor's degree (BSc, BA)"],
+        ["topup","Top-up or upgrade from diploma to bachelor's"],
+        ["msc","Master's degree (MSc, MA)"],
+        ["unsure","Not sure yet"]]},
+      {k:"wantField", t:"text", q:"Field you want to study", req:true},
+      {k:"intake", t:"select", q:"When do you want to start?", opts:[
+        ["next6","Within the next 6 months"],
+        ["y1","In about a year"],
+        ["y2","In about two years"],
+        ["flex","Whenever I can get funding"]]},
+      {k:"goal", t:"select", q:"What is the main goal?", req:true, hint:"This changes the advice a lot, so be honest with yourself here.", opts:[
+        ["work","To live and work abroad afterwards"],
+        ["academic","The qualification itself, for teaching, research or promotion"],
+        ["both","Both equally"]]}
+    ]
+  },
+  {
+    title: "English test",
+    fields: [
+      {k:"english", t:"select", q:"Have you taken an English test?", req:true, opts:[
+        ["yes","Yes, I have a valid score"],
+        ["booked","Booked, not yet taken"],
+        ["no","Not yet"],
+        ["exempt","I believe I am exempt"]]},
+      {k:"englishScore", t:"text", q:"Which test and what score?", hint:"For example IELTS 7.0, or OET B. Leave blank if not taken."},
+      {k:"englishDate", t:"text", q:"Test date", hint:"Scores usually expire after two years."}
+    ]
+  },
+  {
+    title: "Work and experience",
+    fields: [
+      {k:"workYears", t:"select", q:"Years of work since you qualified", req:true, opts:[
+        ["0","None yet"],
+        ["u1","Less than a year"],
+        ["1","1 to 2 years"],
+        ["2","2 to 3 years"],
+        ["3","3 to 5 years"],
+        ["5","More than 5 years"]]},
+      {k:"role", t:"text", q:"Current or most recent role and employer"},
+      {k:"specialty", t:"text", q:"Any specialty or area you focus on"},
+      {k:"research", t:"select", q:"Research output", opts:[
+        ["none","None"],
+        ["thesis","An undergraduate thesis or long project"],
+        ["conf","Conference presentations"],
+        ["pub","Published papers"]]},
+      {k:"leadership", t:"textarea", q:"Leadership, teaching, volunteering or community work", hint:"Scholarship panels weigh this heavily. Two or three lines is enough."}
+    ]
+  },
+  {
+    title: "Money",
+    intro: "Nobody sees these numbers except you and Elvis. They decide which options are realistic, so a rough honest figure is more useful than an optimistic one.",
+    fields: [
+      {k:"contribution", t:"select", q:"What could you or your family contribute per year?", req:true, opts:[
+        ["none","Nothing. I need full funding with a living allowance"],
+        ["small","A small amount, under about $3,000"],
+        ["mid","Roughly $3,000 to $10,000"],
+        ["large","More than $10,000"]]},
+      {k:"proof", t:"select", q:"Could you show bank statements for a visa?", hint:"Most countries ask you to prove you hold a set amount, often for several months before applying.", opts:[
+        ["yes","Yes, a substantial amount"],
+        ["some","Some, but probably not enough"],
+        ["no","No"],
+        ["unsure","I do not know what is required"]]},
+      {k:"dependants", t:"select", q:"Would anyone travel with you?", opts:[
+        ["no","No"],
+        ["spouse","Spouse"],
+        ["children","Children"],
+        ["both","Spouse and children"]]},
+      {k:"remit", t:"select", q:"Would you need to send money home while studying?", opts:[
+        ["no","No"],["maybe","Possibly"],["yes","Yes, regularly"]]}
+    ]
+  },
+  {
+    title: "Where you want to go",
+    fields: [
+      {k:"regions", t:"chips", q:"Which places interest you?", hint:"Pick as many as you like.", opts:[
+        ["uk","United Kingdom"],["us","United States"],["ca","Canada"],
+        ["eu","Continental Europe"],["any","Open to anywhere"]]},
+      {k:"exclude", t:"text", q:"Anywhere you would rule out?"},
+      {k:"language", t:"select", q:"Language of study", opts:[
+        ["en","English only"],
+        ["learn","I would learn another language if the funding is good"]]},
+      {k:"optimise", t:"select", q:"If you had to choose one thing to optimise for", req:true, opts:[
+        ["cost","Lowest cost to me"],
+        ["work","Best chance of working there afterwards"],
+        ["school","Strongest university"]]}
+    ]
+  },
+  {
+    title: "One last thing",
+    fields: [
+      {k:"agency", t:"select", q:"Have you paid an agency to help you apply?", hint:"Asked because many charge for applications that are free, or for schools that cannot sponsor a student visa. Knowing early saves money.", opts:[
+        ["no","No"],
+        ["paid","Yes, I have paid one"],
+        ["talking","I am talking to one but have not paid"]]},
+      {k:"agencyName", t:"text", q:"Which agency, and what did they promise?"},
+      {k:"applied", t:"select", q:"Have you applied abroad before?", opts:[
+        ["no","No"],["refused","Yes, and was refused"],["accepted","Yes, and was accepted but could not go"]]},
+      {k:"anything", t:"textarea", q:"Anything else Elvis should know?"}
+    ]
+  }
+];
+
+/* ---------- regulated professions ---------- */
+const REGULATED = [
+  {m:/nurs|midwif/i, name:"Nursing and midwifery",
+   body:"A nursing degree abroad does not by itself let you practise there. Registration is separate: the NMC in the UK (a computer test plus a practical OSCE), the NCLEX for the United States and Canada, the BIG register in the Netherlands. If your goal is to work as a nurse rather than to teach or research, look hard at direct recruitment before paying tuition. UK trusts and several Canadian and Gulf employers recruit Ghanaian nurses, sponsor the visa, and often cover the registration exam costs. You earn instead of paying."},
+  {m:/medicin|doctor|surgeon|^mb/i, name:"Medicine",
+   body:"Practising medicine abroad requires licensing exams and supervised practice, not just a degree. The PLAB in the UK, USMLE in the United States, MCCQE in Canada. A taught master's in a medical field is usually academic and does not lead to a licence."},
+  {m:/pharmac/i, name:"Pharmacy",
+   body:"Pharmacist registration is separate from the degree: the GPhC route in the UK, NAPLEX in the United States, PEBC in Canada. Confirm whether the programme leads to registration or is academic only."},
+  {m:/law|llb|legal/i, name:"Law",
+   body:"Law is jurisdiction-bound. A master's in law abroad rarely lets you practise there without further qualification, and your Ghanaian qualification does not transfer directly."},
+  {m:/teach|educat|b\.?ed/i, name:"Teaching",
+   body:"Teaching in state schools abroad normally requires local certification. Check whether the programme includes qualified teacher status or is academic only."},
+  {m:/engineer/i, name:"Engineering",
+   body:"Chartered or professional engineer status is granted locally and usually needs supervised experience after the degree. The degree alone is not the licence, though engineering work is generally open to graduates without it."},
+  {m:/architect/i, name:"Architecture",
+   body:"Architect registration is local and usually requires accredited study plus supervised practice. Check whether the programme is accredited by that country's board."},
+  {m:/account|acca|audit/i, name:"Accounting",
+   body:"Professional status comes from the body, not the degree. Check whether the programme gives exemptions from ACCA, CPA or CIMA papers, since that is where the value usually sits."}
+];
+
+/* ---------- scholarship rules ---------- */
+function yearsNum(v){ return {"0":0,"u1":0.5,"1":1.5,"2":2.5,"3":4,"5":6}[v] ?? 0; }
+
+function schemes(d){
+  const held = d.held, lvl = d.wantLevel, yrs = yearsNum(d.workYears);
+  const hasDegree = held === "bachelor" || held === "masters";
+  const goodClass = ["first","upper"].includes(d.grade);
+  const pgTarget = lvl === "msc" || (lvl === "unsure" && hasDegree);
+  const out = [];
+  const add = (name, v, why, url) => out.push({name, v, why, url});
+
+  if (pgTarget) {
+    add("Chevening", hasDegree && yrs >= 2 ? "yes" : "no",
+      hasDegree && yrs >= 2
+        ? "You meet the headline criteria: a completed bachelor's degree and at least two years of work. Fully funded, UK only, one-year master's, and you commit to returning home for two years afterwards."
+        : !hasDegree
+          ? "Requires a completed bachelor's degree. Not open to you yet."
+          : "Requires about two years of full-time work experience. You are not there yet, so plan for a later cycle.",
+      "https://www.chevening.org/scholarship/ghana/");
+
+    add("Commonwealth Master's Scholarships", hasDegree ? (goodClass ? "yes" : "maybe") : "no",
+      hasDegree
+        ? (goodClass
+          ? "Ghana is eligible and your class of degree meets the usual standard. Fully funded, UK, and weighted towards development impact in your home country."
+          : "Ghana is eligible, but these normally ask for an upper second class or better, sometimes offset by a relevant master's or strong experience. Worth applying, not worth relying on.")
+        : "Requires a completed bachelor's degree.",
+      "https://cscuk.fcdo.gov.uk/scholarships/commonwealth-masters-scholarships/");
+
+    add("Erasmus Mundus Joint Masters", hasDegree ? "yes" : "no",
+      hasDegree
+        ? "The strongest option if you have little work experience, because it does not require any. Fully funded with a monthly allowance, studied across two or more European countries. Deadlines are usually autumn or winter for the following September."
+        : "Requires a completed bachelor's degree.",
+      "https://www.eacea.ec.europa.eu/scholarships/erasmus-mundus-catalogue_en");
+
+    add("DAAD development-related scholarships", hasDegree && yrs >= 2 ? "yes" : "no",
+      hasDegree && yrs >= 2
+        ? "Germany, fully funded, aimed at professionals from developing countries. Strongest for fields with a clear development angle: health, agriculture, engineering, public policy, water."
+        : !hasDegree ? "Requires a completed bachelor's degree."
+          : "These normally ask for at least two years of professional experience.",
+      "https://www.daad.de/en/studying-in-germany/scholarships/daad-scholarships/");
+
+    add("Fulbright Foreign Student Program", hasDegree ? "maybe" : "no",
+      hasDegree
+        ? "Applied through the US Embassy in Accra, with deadlines roughly a year and a half before you would travel. Competitive and small in number, but fully funded."
+        : "Requires a completed bachelor's degree.",
+      "https://foreign.fulbrightonline.org/");
+
+    add("Mastercard Foundation Scholars Program", hasDegree && ["none","small"].includes(d.contribution) ? "maybe" : "no",
+      hasDegree && ["none","small"].includes(d.contribution)
+        ? "Selects on financial need and demonstrated leadership rather than grades alone. Runs through specific partner universities, so you apply to the university, not to a central scheme. Check which partners currently offer it at master's level."
+        : hasDegree
+          ? "Built around financial need. With the contribution you indicated, you are unlikely to be the target applicant."
+          : "Requires a completed bachelor's degree for the master's-level awards.",
+      "https://mastercardfdn.org/en/what-we-do/our-programs/mastercard-foundation-scholars-program/");
+  }
+
+  if (held === "diploma" && lvl === "msc") {
+    add("Top up at home first", "maybe",
+      "The cheapest and fastest route to the fully funded master's schemes above is a post-diploma bachelor's in Ghana. KNUST, Legon and UCC all run them, often part-time alongside work. Finish it with an upper second and the whole list above opens up, including Chevening and Commonwealth.", null);
+  }
+
+  if (lvl === "bsc" || lvl === "topup" || (lvl === "unsure" && !hasDegree)) {
+    add("Mastercard Foundation Scholars Program", ["none","small"].includes(d.contribution) ? "maybe" : "no",
+      "One of the few that funds undergraduate study for African students, through partner universities including some in Africa. You apply to the partner university.",
+      "https://mastercardfdn.org/en/what-we-do/our-programs/mastercard-foundation-scholars-program/");
+    add("University entrance scholarships", "maybe",
+      "At undergraduate level the realistic money is institution-level: entrance awards, fee reductions and bursaries for international students. These are usually partial, so plan on covering a share yourself.", null);
+    add("Low-tuition countries", "maybe",
+      "Germany and Norway charge little or no tuition at public universities even for international students, which can beat a partial scholarship elsewhere on net cost. You still have to prove living costs, often through a blocked account.", null);
+  }
+
+  return out;
+}
+
+/* ---------- analysis ---------- */
+function analyse(d){
+  const held = d.held, lvl = d.wantLevel;
+  const r = {route:"", notes:[], blockers:[], checks:[], prof:null};
+
+  // route
+  if (held === "diploma" && lvl === "msc")
+    r.notes.push(["A diploma usually cannot go straight to a master's.","Most universities abroad require a bachelor's degree for master's entry. The normal path is to top up your diploma to a bachelor's first, which is often cheaper and faster to do at home. Treat a top-up as step one, not as a detour."]);
+  if (held === "diploma" && lvl === "topup")
+    r.notes.push(["Top-ups abroad are harder than they look.","Post-diploma top-up programmes abroad often assume you are already registered in that country, especially in regulated fields. Upgrading at home at KNUST, Legon or UCC is usually quicker, far cheaper, and leaves you eligible for the big master's scholarships afterwards."]);
+  if (held === "wassce" && lvl !== "bsc")
+    r.notes.push(["Start with a bachelor's.","With WASSCE only, the bachelor's degree is the entry point. Full scholarships at undergraduate level are much rarer than at master's level, so budget realistically."]);
+  if ((held === "bachelor" || held === "masters") && (lvl === "msc" || lvl === "unsure"))
+    r.notes.push(["You are on the well-funded path.","Master's level is where the fully funded schemes concentrate. Your competitiveness now rests on class of degree, work experience and what you have done outside your job."]);
+
+  // regulated profession
+  const field = ((d.wantField||"") + " " + (d.heldField||""));
+  const hit = REGULATED.find(p => p.m.test(field));
+  if (hit) r.prof = hit;
+
+  // blockers, ordered by how much they stop everything else
+  if (d.english === "no")
+    r.blockers.push(["Sit an English test","Nearly every application and visa needs one, and you cannot be made an offer without it. Book IELTS Academic, or OET if you are in a health profession. This is the single most common reason an application from Ghana stalls."]);
+  if (d.english === "booked")
+    r.blockers.push(["Get the English result in hand","Everything else waits on it. Do not submit applications assuming the score."]);
+  if (d.passport === "none")
+    r.blockers.push(["Apply for a passport now","Processing takes time and no visa application can start without it."]);
+  if (d.passport === "soon")
+    r.blockers.push(["Renew your passport","Many countries will not issue a student visa on a passport expiring during the course."]);
+  if (d.grade === "unknown")
+    r.blockers.push(["Get your transcript and confirm your class","Scholarship eligibility turns on it. Request it early, as Ghanaian institutions can be slow and some schemes need it certified."]);
+  if (["none","some","unsure"].includes(d.proof))
+    r.blockers.push(["Find out the proof-of-funds figure for your target countries","Visa refusals on funds are more common than admission rejections. The amount, and how long it must sit in the account, are set by the destination country and change. Know the number before choosing where to apply."]);
+  if (d.agency === "paid")
+    r.blockers.push(["Check what the agency actually sold you","Verify that the institutions they named can legally sponsor a student visa: the GOV.UK student sponsor register for the UK, the designated learning institution list for Canada, the SEVP list for the United States. If a school is not on the list, the admission is worthless for a visa."]);
+  if (d.contribution === "none" && d.goal !== "academic")
+    r.blockers.push(["Accept that full funding narrows the list sharply","Awards covering tuition and living costs are a small group with early deadlines. Build the plan around their deadlines rather than around universities."]);
+  if (yearsNum(d.workYears) < 2 && (lvl === "msc") && (d.held === "bachelor"))
+    r.blockers.push(["Consider the timing of your application","Several of the strongest awards want two years of work. If you are close, waiting one cycle can move you from ineligible to competitive."]);
+  if (d.dependants && d.dependants !== "no")
+    r.blockers.push(["Check dependant rules before you plan around them","Several countries have restricted the right to bring family on taught master's courses. Confirm the current rule for each destination rather than assuming."]);
+
+  // readiness
+  r.checks = [
+    ["English test result", d.english === "yes"],
+    ["Valid passport", ["valid2y","valid1y"].includes(d.passport)],
+    ["Transcript and certificate", d.grade && d.grade !== "unknown"],
+    ["Two referees who will respond", false],
+    ["Evidence of funds for a visa", d.proof === "yes"],
+    ["A clear written reason for this course", false]
+  ];
+  return r;
+}
+
+/* ---------- rendering ---------- */
+const el = id => document.getElementById(id);
+
+function field(f){
+  const v = D[f.k] ?? f.def ?? "";
+  const lab = `<label class="q" for="i-${f.k}">${f.q}${f.req?' <span class="muted">(required)</span>':''}</label>` +
+              (f.hint?`<span class="hint">${f.hint}</span>`:"");
+  if (f.t === "select"){
+    return `<div class="f">${lab}<select id="i-${f.k}" data-k="${f.k}">
+      <option value="">Choose one</option>
+      ${f.opts.map(([k,t])=>`<option value="${k}"${v===k?" selected":""}>${t}</option>`).join("")}
+    </select></div>`;
+  }
+  if (f.t === "chips"){
+    const sel = Array.isArray(v) ? v : [];
+    return `<div class="f">${lab}<div class="chips">${f.opts.map(([k,t])=>
+      `<label class="chip"><input type="checkbox" data-k="${f.k}" value="${k}"${sel.includes(k)?" checked":""}><span>${t}</span></label>`).join("")}</div></div>`;
+  }
+  if (f.t === "textarea"){
+    return `<div class="f">${lab}<textarea id="i-${f.k}" data-k="${f.k}">${esc(v)}</textarea></div>`;
+  }
+  return `<div class="f">${lab}<input type="text" id="i-${f.k}" data-k="${f.k}" value="${esc(v)}"></div>`;
+}
+
+function esc(s){ return String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function renderStep(){
+  const s = STEPS[step];
+  const bar = `<div class="bar" aria-hidden="true">${STEPS.map((_,i)=>`<i class="${i<=step?"done":""}"></i>`).join("")}</div>`;
+  const head = step === 0
+    ? `<h1>Find a funded place to study</h1><p class="lede">${s.intro}</p><p class="muted">${s.note}</p>`
+    : `<div class="step-label">Step ${step} of ${STEPS.length-1}</div><h2>${s.title}</h2>${s.intro?`<p class="muted">${s.intro}</p>`:""}`;
+  const body = s.fields.length ? `<fieldset>${s.fields.map(field).join("")}</fieldset>` : "";
+  const back = step > 0 ? `<button class="ghost" id="back">Back</button>` : "";
+  const next = step === STEPS.length-1 ? "See my results" : (step===0 ? "Start" : "Continue");
+  el("app").innerHTML = bar + `<div class="panel">${head}${body}
+    <div class="err" id="err" hidden></div>
+    <div class="nav">${back}<div class="spacer"></div><button class="primary" id="next">${next}</button></div></div>
+    ${step>0?'<p class="muted" style="margin-top:1rem">Your answers stay on this device until you send the summary yourself.</p>':""}`;
+  wire();
+  window.scrollTo(0,0);
+}
+
+function wire(){
+  document.querySelectorAll("[data-k]").forEach(n=>{
+    n.addEventListener("change", ()=>{
+      const k = n.dataset.k;
+      if (n.type === "checkbox"){
+        const picks = [...document.querySelectorAll(`input[data-k="${k}"]:checked`)].map(x=>x.value);
+        D[k] = picks;
+      } else D[k] = n.value;
+      save();
+    });
+  });
+  const b = el("back"); if (b) b.onclick = ()=>{ step--; renderStep(); };
+  el("next").onclick = ()=>{
+    const missing = (STEPS[step].fields||[]).filter(f=>f.req && !(D[f.k]??"").length);
+    if (missing.length){
+      const e = el("err");
+      e.hidden = false;
+      e.textContent = "Still needed: " + missing.map(f=>f.q.replace(/\?$/,"")).join(", ") + ".";
+      return;
+    }
+    if (step === STEPS.length-1) renderResults(); else { step++; renderStep(); }
+  };
+}
+
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify({step,D})); }catch(e){} }
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY); if(!raw) return;
+    const o = JSON.parse(raw);
+    Object.assign(D, o.D||{});
+  }catch(e){}
+}
+
+function renderResults(){
+  const a = analyse(D), sc = schemes(D);
+  const lvlText = {bsc:"Bachelor's",topup:"Top-up to bachelor's",msc:"Master's",unsure:"Level undecided"}[D.wantLevel]||"";
+  const yes = sc.filter(s=>s.v==="yes"), maybe = sc.filter(s=>s.v==="maybe"), no = sc.filter(s=>s.v==="no");
+
+  const card = s => `<div class="verdict ${s.v}"><h3>${esc(s.name)}<span class="tag ${s.v}">${
+      s.v==="yes"?"Looks eligible":s.v==="maybe"?"Worth checking":"Not eligible yet"}</span></h3>
+      <p>${s.why}</p>${s.url?`<p><a href="${s.url}" target="_blank" rel="noopener">Check the current criteria and deadline</a></p>`:""}</div>`;
+
+  let html = `<h1>Where you stand</h1>
+    <p class="lede">${esc(D.name||"")} — ${esc(D.wantField||"")}, ${lvlText}.</p>`;
+
+  a.notes.forEach(([h,b])=>{ html += `<div class="alert note"><h3>${h}</h3><p>${b}</p></div>`; });
+
+  if (a.prof) html += `<div class="alert warn"><h3>${a.prof.name} is a licensed profession</h3><p>${a.prof.body}</p></div>`;
+
+  html += `<div class="sect"><h2>Funding you can apply for</h2>`;
+  if (yes.length) html += yes.map(card).join("");
+  else html += `<p class="muted">Nothing in the major schemes matches your profile cleanly yet. The items below show why, and what would change that.</p>`;
+  if (maybe.length) html += maybe.map(card).join("");
+  if (no.length) html += `<h3 style="margin-top:1.2rem;font-size:1rem">Not open to you right now</h3>` + no.map(card).join("");
+  html += `<p class="muted">Eligibility rules and deadlines change every cycle. Confirm each one on the scheme's own site before relying on it.</p></div>`;
+
+  html += `<div class="sect"><h2>What to deal with first</h2>`;
+  if (a.blockers.length){
+    html += a.blockers.map(([h,b],i)=>`<div class="verdict maybe"><h3>${i+1}. ${h}</h3><p>${b}</p></div>`).join("");
+  } else html += `<p>Nothing obvious is blocking you. Go straight to choosing programmes.</p>`;
+  html += `</div>`;
+
+  html += `<div class="sect"><h2>Documents you will need</h2><ul class="check">` +
+    a.checks.map(([t,ok])=>`<li class="${ok?"ok":"todo"}">${t}${ok?"":" — not yet confirmed"}</li>`).join("") +
+    `</ul></div>`;
+
+  html += `<div class="sect"><h2>About deadlines</h2>
+    <p>Scholarship deadlines run months ahead of university deadlines. Chevening and Commonwealth typically close around a year before the course starts, and Erasmus Mundus in the autumn or winter before. Finding a course in March for that September usually means the funding for that intake has already closed. Work backwards from the scholarship date, not the course date.</p></div>`;
+
+  html += `<div class="sect noprint"><h2>Send this to Elvis</h2>
+    <p class="muted">Copy the summary below and send it on WhatsApp. He runs the school-by-school research from it: programmes, fees, scholarships and net cost after the award.</p>
+    <pre class="summary" id="sum">${esc(summaryText(a, sc))}</pre>
+    <div class="nav"><button class="primary" id="copy">Copy summary</button>
+      <button class="ghost" id="print">Save as PDF</button>
+      <div class="spacer"></div><button class="ghost" id="edit">Edit answers</button></div></div>`;
+
+  el("app").innerHTML = html;
+  el("copy").onclick = async ()=>{
+    const t = el("sum").textContent;
+    try{ await navigator.clipboard.writeText(t); toast("Summary copied"); }
+    catch(e){
+      const r = document.createRange(); r.selectNodeContents(el("sum"));
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Select and copy the text");
+    }
+  };
+  el("print").onclick = ()=>window.print();
+  el("edit").onclick = ()=>{ step = 1; renderStep(); };
+  window.scrollTo(0,0);
+}
+
+function toast(msg){
+  const t = el("toast"); t.textContent = msg; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 1800);
+}
+
+function lab(key, val){
+  for (const s of STEPS) for (const f of (s.fields||[]))
+    if (f.k === key && f.opts){ const m = f.opts.find(o=>o[0]===val); if (m) return m[1]; }
+  return val || "not given";
+}
+
+function summaryText(a, sc){
+  const L = [];
+  L.push("STUDY ABROAD INTAKE");
+  L.push("Completed " + new Date().toISOString().slice(0,10));
+  L.push("");
+  L.push("APPLICANT");
+  L.push("Name: " + (D.name||"-"));
+  L.push("Contact: " + (D.contact||"-"));
+  L.push("Citizenship: " + (D.citizenship||"-"));
+  L.push("Passport: " + lab("passport", D.passport));
+  L.push("");
+  L.push("QUALIFICATION HELD");
+  L.push("Level: " + lab("held", D.held));
+  L.push("Field: " + (D.heldField||"-"));
+  L.push("Institution: " + (D.heldInst||"-") + ", " + (D.heldYear||"year not given"));
+  L.push("Class: " + lab("grade", D.grade) + (D.cgpa?("; CGPA " + D.cgpa):""));
+  if (D.wassce) L.push("WASSCE: " + D.wassce);
+  L.push("");
+  L.push("WANTS");
+  L.push("Level: " + lab("wantLevel", D.wantLevel));
+  L.push("Field: " + (D.wantField||"-"));
+  L.push("Intake: " + lab("intake", D.intake));
+  L.push("Main goal: " + lab("goal", D.goal));
+  L.push("Optimise for: " + lab("optimise", D.optimise));
+  L.push("Regions: " + ((D.regions||[]).map(r=>lab("regions",r)).join(", ") || "not given") +
+         (D.exclude?("; rules out " + D.exclude):""));
+  L.push("Language: " + lab("language", D.language));
+  L.push("");
+  L.push("ENGLISH");
+  L.push(lab("english", D.english) + (D.englishScore?(" — " + D.englishScore):"") + (D.englishDate?(", " + D.englishDate):""));
+  L.push("");
+  L.push("EXPERIENCE");
+  L.push("Years: " + lab("workYears", D.workYears));
+  L.push("Role: " + (D.role||"-"));
+  L.push("Specialty: " + (D.specialty||"-"));
+  L.push("Research: " + lab("research", D.research));
+  L.push("Leadership: " + (D.leadership||"-"));
+  L.push("");
+  L.push("MONEY");
+  L.push("Annual contribution: " + lab("contribution", D.contribution));
+  L.push("Funds evidence: " + lab("proof", D.proof));
+  L.push("Dependants: " + lab("dependants", D.dependants));
+  L.push("Remittances needed: " + lab("remit", D.remit));
+  L.push("");
+  L.push("OTHER");
+  L.push("Agency: " + lab("agency", D.agency) + (D.agencyName?(" — " + D.agencyName):""));
+  L.push("Applied before: " + lab("applied", D.applied));
+  L.push("Notes: " + (D.anything||"-"));
+  L.push("");
+  L.push("SCREENING RESULT");
+  if (a.prof) L.push("Regulated profession: " + a.prof.name + " — licensing is separate from the degree.");
+  const yes = sc.filter(s=>s.v==="yes").map(s=>s.name);
+  const maybe = sc.filter(s=>s.v==="maybe").map(s=>s.name);
+  L.push("Likely eligible: " + (yes.join(", ") || "none of the major schemes"));
+  L.push("Worth checking: " + (maybe.join(", ") || "none"));
+  L.push("Blockers:");
+  if (a.blockers.length) a.blockers.forEach((b,i)=>L.push("  " + (i+1) + ". " + b[0]));
+  else L.push("  none identified");
+  L.push("");
+  L.push("Next: run the study-abroad-matcher skill on this to produce the shortlist and brief.");
+  return L.join("\n");
+}
+
+load();
+renderStep();
+</script>
+</body>
+</html>

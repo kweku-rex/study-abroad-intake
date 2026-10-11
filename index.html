@@ -313,6 +313,23 @@ const REGULATED = [
 ];
 
 /* ---------- scholarship rules ---------- */
+function inRegion(d, r){
+  const picks = Array.isArray(d.regions) ? d.regions : [];
+  if (!r || r === "multi") return true;
+  if (!picks.length || picks.includes("any")) return true;
+  return picks.includes(r);
+}
+const REGION_NAME = {uk:"the United Kingdom", us:"the United States", ca:"Canada", eu:"continental Europe"};
+
+function sameField(a, b){
+  const n = s => String(s||"").toLowerCase().replace(/[^a-z]/g,"");
+  const x = n(a), y = n(b);
+  if (!x || !y) return false;
+  if (x.includes(y) || y.includes(x)) return true;
+  const tok = s => String(s||"").toLowerCase().split(/[^a-z]+/).filter(w=>w.length>4);
+  return tok(a).some(w => tok(b).includes(w));
+}
+
 function yearsNum(v){ return {"0":0,"u1":0.5,"1":1.5,"2":2.5,"3":4,"5":6}[v] ?? 0; }
 
 function schemes(d){
@@ -321,7 +338,7 @@ function schemes(d){
   const goodClass = ["first","upper"].includes(d.grade);
   const pgTarget = lvl === "msc" || (lvl === "unsure" && hasDegree);
   const out = [];
-  const add = (name, v, why, url) => out.push({name, v, why, url});
+  const add = (name, v, why, url, region) => out.push({name, v, why, url, region});
 
   if (pgTarget) {
     add("Chevening", hasDegree && yrs >= 2 ? "yes" : "no",
@@ -330,7 +347,7 @@ function schemes(d){
         : !hasDegree
           ? "Requires a completed bachelor's degree. Not open to you yet."
           : "Requires about two years of full-time work experience. You are not there yet, so plan for a later cycle.",
-      "https://www.chevening.org/scholarship/ghana/");
+      "https://www.chevening.org/scholarship/ghana/", "uk");
 
     add("Commonwealth Master's Scholarships", hasDegree ? (goodClass ? "yes" : "maybe") : "no",
       hasDegree
@@ -338,26 +355,26 @@ function schemes(d){
           ? "Ghana is eligible and your class of degree meets the usual standard. Fully funded, UK, and weighted towards development impact in your home country."
           : "Ghana is eligible, but these normally ask for an upper second class or better, sometimes offset by a relevant master's or strong experience. Worth applying, not worth relying on.")
         : "Requires a completed bachelor's degree.",
-      "https://cscuk.fcdo.gov.uk/scholarships/commonwealth-masters-scholarships/");
+      "https://cscuk.fcdo.gov.uk/scholarships/commonwealth-masters-scholarships/", "uk");
 
     add("Erasmus Mundus Joint Masters", hasDegree ? "yes" : "no",
       hasDegree
         ? "The strongest option if you have little work experience, because it does not require any. Fully funded with a monthly allowance, studied across two or more European countries. Deadlines are usually autumn or winter for the following September."
         : "Requires a completed bachelor's degree.",
-      "https://www.eacea.ec.europa.eu/scholarships/erasmus-mundus-catalogue_en");
+      "https://www.eacea.ec.europa.eu/scholarships/erasmus-mundus-catalogue_en", "eu");
 
     add("DAAD development-related scholarships", hasDegree && yrs >= 2 ? "yes" : "no",
       hasDegree && yrs >= 2
         ? "Germany, fully funded, aimed at professionals from developing countries. Strongest for fields with a clear development angle: health, agriculture, engineering, public policy, water."
         : !hasDegree ? "Requires a completed bachelor's degree."
           : "These normally ask for at least two years of professional experience.",
-      "https://www.daad.de/en/studying-in-germany/scholarships/daad-scholarships/");
+      "https://www.daad.de/en/studying-in-germany/scholarships/daad-scholarships/", "eu");
 
     add("Fulbright Foreign Student Program", hasDegree ? "maybe" : "no",
       hasDegree
         ? "Applied through the US Embassy in Accra, with deadlines roughly a year and a half before you would travel. Competitive and small in number, but fully funded."
         : "Requires a completed bachelor's degree.",
-      "https://foreign.fulbrightonline.org/");
+      "https://foreign.fulbrightonline.org/", "us");
 
     add("Mastercard Foundation Scholars Program", hasDegree && ["none","small"].includes(d.contribution) ? "maybe" : "no",
       hasDegree && ["none","small"].includes(d.contribution)
@@ -365,22 +382,22 @@ function schemes(d){
         : hasDegree
           ? "Built around financial need. With the contribution you indicated, you are unlikely to be the target applicant."
           : "Requires a completed bachelor's degree for the master's-level awards.",
-      "https://mastercardfdn.org/en/what-we-do/our-programs/mastercard-foundation-scholars-program/");
+      "https://mastercardfdn.org/en/what-we-do/our-programs/mastercard-foundation-scholars-program/", "multi");
   }
 
   if (held === "diploma" && lvl === "msc") {
     add("Top up at home first", "maybe",
-      "The cheapest and fastest route to the fully funded master's schemes above is a post-diploma bachelor's in Ghana. KNUST, Legon and UCC all run them, often part-time alongside work. Finish it with an upper second and the whole list above opens up, including Chevening and Commonwealth.", null);
+      "The cheapest and fastest route to the fully funded master's schemes above is a post-diploma bachelor's in Ghana. KNUST, Legon and UCC all run them, often part-time alongside work. Finish it with an upper second and the whole list above opens up, including Chevening and Commonwealth.", null, "multi");
   }
 
   if (lvl === "bsc" || lvl === "topup" || (lvl === "unsure" && !hasDegree)) {
     add("Mastercard Foundation Scholars Program", ["none","small"].includes(d.contribution) ? "maybe" : "no",
       "One of the few that funds undergraduate study for African students, through partner universities including some in Africa. You apply to the partner university.",
-      "https://mastercardfdn.org/en/what-we-do/our-programs/mastercard-foundation-scholars-program/");
+      "https://mastercardfdn.org/en/what-we-do/our-programs/mastercard-foundation-scholars-program/", "multi");
     add("University entrance scholarships", "maybe",
-      "At undergraduate level the realistic money is institution-level: entrance awards, fee reductions and bursaries for international students. These are usually partial, so plan on covering a share yourself.", null);
+      "At undergraduate level the realistic money is institution-level: entrance awards, fee reductions and bursaries for international students. These are usually partial, so plan on covering a share yourself.", null, "multi");
     add("Low-tuition countries", "maybe",
-      "Germany and Norway charge little or no tuition at public universities even for international students, which can beat a partial scholarship elsewhere on net cost. You still have to prove living costs, often through a blocked account.", null);
+      "Germany and Norway charge little or no tuition at public universities even for international students, which can beat a partial scholarship elsewhere on net cost. You still have to prove living costs, often through a blocked account.", null, "eu");
   }
 
   return out;
@@ -398,8 +415,22 @@ function analyse(d){
     r.notes.push(["Top-ups abroad are harder than they look.","Post-diploma top-up programmes abroad often assume you are already registered in that country, especially in regulated fields. Upgrading at home at KNUST, Legon or UCC is usually quicker, far cheaper, and leaves you eligible for the big master's scholarships afterwards."]);
   if (held === "wassce" && lvl !== "bsc")
     r.notes.push(["Start with a bachelor's.","With WASSCE only, the bachelor's degree is the entry point. Full scholarships at undergraduate level are much rarer than at master's level, so budget realistically."]);
-  if ((held === "bachelor" || held === "masters") && (lvl === "msc" || lvl === "unsure"))
+  if (held === "bachelor" && (lvl === "msc" || lvl === "unsure"))
     r.notes.push(["You are on the well-funded path.","Master's level is where the fully funded schemes concentrate. Your competitiveness now rests on class of degree, work experience and what you have done outside your job."]);
+  if (held === "masters" && (lvl === "msc" || lvl === "unsure")){
+    const same = sameField(d.heldField, d.wantField);
+    r.notes.push([
+      same ? "This would be a second master's in the same field."
+           : "This would be a second master's.",
+      (same
+        ? "You already hold a master's in this subject. Selection panels will ask directly why you need the same qualification twice, and there is rarely a good answer. "
+        : "You already hold a master's. That is not a bar, but panels will ask what the second one gives you that the first did not. ") +
+      (d.goal === "work"
+        ? "You have also said the goal is to live and work abroad. Be careful here: the fully funded schemes exist to send people home with skills, not to relocate them. Chevening requires you to return home for two years, and Commonwealth is explicitly about development impact in your own country. Applying against a scheme's stated purpose usually fails, and it wastes a cycle. "
+        : "") +
+      "Three routes are usually stronger than repeating the degree: a PhD, where a master's is the prerequisite rather than a repetition; a master's in a genuinely different field that builds on the first; or a work visa route, applied for directly rather than through study."
+    ]);
+  }
 
   // regulated profession
   const field = ((d.wantField||"") + " " + (d.heldField||""));
@@ -407,6 +438,14 @@ function analyse(d){
   if (hit) r.prof = hit;
 
   // blockers, ordered by how much they stop everything else
+  if (d.intake === "next6"){
+    r.blockers.push(["Your timeline does not fit funded study",
+      "Fully funded scholarships close roughly six to twelve months before the course starts, so the intakes you could still apply for in the next six months have already shut. " +
+      (d.contribution === "none"
+        ? "Needing full funding makes this absolute: there is nothing to apply to for a start that soon. "
+        : "") +
+      "Target the September intake after next instead. The European deadlines for it, including Erasmus Mundus, usually fall between December and February, which is the window to work towards."]);
+  }
   if (d.english === "no")
     r.blockers.push(["Sit an English test","Nearly every application and visa needs one, and you cannot be made an offer without it. Book IELTS Academic, or OET if you are in a health profession. This is the single most common reason an application from Ghana stalls."]);
   if (d.english === "booked")
@@ -426,7 +465,14 @@ function analyse(d){
   if (yearsNum(d.workYears) < 2 && (lvl === "msc") && (d.held === "bachelor"))
     r.blockers.push(["Consider the timing of your application","Several of the strongest awards want two years of work. If you are close, waiting one cycle can move you from ineligible to competitive."]);
   if (d.dependants && d.dependants !== "no")
-    r.blockers.push(["Check dependant rules before you plan around them","Several countries have restricted the right to bring family on taught master's courses. Confirm the current rule for each destination rather than assuming."]);
+    r.blockers.push(["Check dependant rules before you plan around them",
+      "Several countries have restricted the right to bring family on taught master's courses. Confirm the current rule for each destination rather than assuming." +
+      (d.contribution === "none"
+        ? " This is the hardest part of your situation. Scholarship living allowances are sized for one person, and most student visas require proof of extra funds for every dependant on top of your own. Full funding plus family is the combination that most often does not add up."
+        : "")]);
+  if (yearsNum(d.workYears) >= 2 && !(d.role||"").trim())
+    r.blockers.push(["Write down your work history properly",
+      "You reported years of experience but left the role blank. Every scholarship application is judged on what you actually did, so this needs to be specific: employer, job title, dates, and what you were responsible for."]);
 
   // readiness
   r.checks = [
@@ -519,7 +565,9 @@ function load(){
 function renderResults(){
   const a = analyse(D), sc = schemes(D);
   const lvlText = {bsc:"Bachelor's",topup:"Top-up to bachelor's",msc:"Master's",unsure:"Level undecided"}[D.wantLevel]||"";
-  const yes = sc.filter(s=>s.v==="yes"), maybe = sc.filter(s=>s.v==="maybe"), no = sc.filter(s=>s.v==="no");
+  const inR = sc.filter(s=>inRegion(D,s.region)), outR = sc.filter(s=>!inRegion(D,s.region));
+  const yes = inR.filter(s=>s.v==="yes"), maybe = inR.filter(s=>s.v==="maybe"), no = inR.filter(s=>s.v==="no");
+  const outGood = outR.filter(s=>s.v!=="no");
 
   const card = s => `<div class="verdict ${s.v}"><h3>${esc(s.name)}<span class="tag ${s.v}">${
       s.v==="yes"?"Looks eligible":s.v==="maybe"?"Worth checking":"Not eligible yet"}</span></h3>
@@ -532,12 +580,22 @@ function renderResults(){
 
   if (a.prof) html += `<div class="alert warn"><h3>${a.prof.name} is a licensed profession</h3><p>${a.prof.body}</p></div>`;
 
+  const picked = (Array.isArray(D.regions)?D.regions:[]).filter(x=>x!=="any");
+  const pickedText = picked.map(x=>REGION_NAME[x]||x).join(" and ");
+
   html += `<div class="sect"><h2>Funding you can apply for</h2>`;
+  if (picked.length) html += `<p class="muted">In ${esc(pickedText)}, which is what you chose.</p>`;
   if (yes.length) html += yes.map(card).join("");
-  else html += `<p class="muted">Nothing in the major schemes matches your profile cleanly yet. The items below show why, and what would change that.</p>`;
+  else html += `<p class="muted">Nothing in the major schemes matches your profile cleanly here. The items below show why, and what would change that.</p>`;
   if (maybe.length) html += maybe.map(card).join("");
   if (no.length) html += `<h3 style="margin-top:1.2rem;font-size:1rem">Not open to you right now</h3>` + no.map(card).join("");
   html += `<p class="muted">Eligibility rules and deadlines change every cycle. Confirm each one on the scheme's own site before relying on it.</p></div>`;
+
+  if (outGood.length){
+    html += `<div class="sect"><h2>Strong funding outside the places you picked</h2>
+      <p class="muted">You did not choose ${esc(outGood.map(s=>REGION_NAME[s.region]).filter((v,i,x)=>v&&x.indexOf(v)===i).join(" or "))}, so these are not recommendations. They are here because they are among the few awards that cover tuition and living costs, and that is worth knowing before you rule a country out.</p>`
+      + outGood.map(card).join("") + `</div>`;
+  }
 
   html += `<div class="sect"><h2>What to deal with first</h2>`;
   if (a.blockers.length){
@@ -635,10 +693,14 @@ function summaryText(a, sc){
   L.push("");
   L.push("SCREENING RESULT");
   if (a.prof) L.push("Regulated profession: " + a.prof.name + " — licensing is separate from the degree.");
-  const yes = sc.filter(s=>s.v==="yes").map(s=>s.name);
-  const maybe = sc.filter(s=>s.v==="maybe").map(s=>s.name);
-  L.push("Likely eligible: " + (yes.join(", ") || "none of the major schemes"));
+  a.notes.forEach(n => L.push("Flag: " + n[0]));
+  const inR = sc.filter(s=>inRegion(D,s.region));
+  const yes = inR.filter(s=>s.v==="yes").map(s=>s.name);
+  const maybe = inR.filter(s=>s.v==="maybe").map(s=>s.name);
+  const out = sc.filter(s=>!inRegion(D,s.region) && s.v!=="no").map(s=>s.name + " (" + (REGION_NAME[s.region]||s.region) + ")");
+  L.push("Likely eligible in chosen regions: " + (yes.join(", ") || "none of the major schemes"));
   L.push("Worth checking: " + (maybe.join(", ") || "none"));
+  L.push("Outside chosen regions: " + (out.join(", ") || "none"));
   L.push("Blockers:");
   if (a.blockers.length) a.blockers.forEach((b,i)=>L.push("  " + (i+1) + ". " + b[0]));
   else L.push("  none identified");

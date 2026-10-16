@@ -673,6 +673,22 @@ function renderResults(){
   window.scrollTo(0,0);
 }
 
+function payload(){
+  const contact = (D.contact||"").trim();
+  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(contact);
+  const body = {
+    name: D.name || "(no name given)",
+    field: (D.wantField||"") + " / " + (D.wantLevel||""),
+    summary: el("sum").textContent,
+    _subject: "Study abroad intake: " + (D.name || "unnamed")
+  };
+  // Formspree uses a field literally named "email" as the reply-to address.
+  // Only send it when the contact really is one, otherwise send it as a phone.
+  if (isEmail) body.email = contact;
+  else if (contact) body.phone = contact;
+  return body;
+}
+
 async function submit(btn){
   const box = el("sendbox");
   btn.disabled = true;
@@ -682,14 +698,7 @@ async function submit(btn){
     const res = await fetch("https://formspree.io/f/" + FORMSPREE_ID, {
       method: "POST",
       headers: {"Content-Type":"application/json","Accept":"application/json"},
-      body: JSON.stringify({
-        name: D.name || "(no name given)",
-        contact: D.contact || "(no contact given)",
-        field: (D.wantField||"") + " / " + (D.wantLevel||""),
-        summary: el("sum").textContent,
-        _subject: "Study abroad intake: " + (D.name || "unnamed"),
-        _gotcha: ""
-      })
+      body: JSON.stringify(payload())
     });
     if (!res.ok) throw new Error("status " + res.status);
     box.innerHTML = `<div class="alert note"><h3>Sent</h3>

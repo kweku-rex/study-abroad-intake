@@ -168,11 +168,14 @@ const STEPS = [
       {k:"held", t:"select", q:"Highest qualification you have completed", req:true, opts:[
         ["wassce","WASSCE / SSSCE only"],
         ["diploma","Diploma or HND"],
+        ["diploma_bsc","Diploma, and studying for a bachelor's now"],
+        ["studying_bsc","Studying for a bachelor's now, nothing completed"],
         ["bachelor","Bachelor's degree (BSc, BA, BEd)"],
         ["masters","Master's degree"]]},
       {k:"heldField", t:"text", q:"What was it in?", hint:"For example Nursing, Computer Science, Accounting.", req:true},
       {k:"heldInst", t:"text", q:"Institution"},
-      {k:"heldYear", t:"text", q:"Year completed", hint:"Or the year you expect to finish."},
+      {k:"heldYear", t:"text", q:"Year completed"},
+      {k:"finish", t:"text", q:"If you are still studying, when do you finish?", hint:"Month and year. This matters: you normally need the degree complete and the transcript issued before the intake starts."},
       {k:"grade", t:"select", q:"Final grade or class", opts:[
         ["first","First Class"],
         ["upper","Second Class Upper (2:1)"],
@@ -182,7 +185,7 @@ const STEPS = [
         ["credit","Credit (diploma / HND)"],
         ["pass","Pass (diploma / HND)"],
         ["unknown","Not sure / still studying"]]},
-      {k:"cgpa", t:"text", q:"CGPA, if you know it", hint:"For example 3.2/4.0. Leave blank if unsure."},
+      {k:"cgpa", t:"text", q:"CGPA, if you know it", hint:"Say which qualification it belongs to, for example '2.84 on my diploma' or '3.1 running average on the BSc'."},
       {k:"wassce", t:"text", q:"WASSCE aggregate, if you have it", hint:"For example aggregate 12. Matters most for bachelor's applications."}
     ]
   },
@@ -202,8 +205,9 @@ const STEPS = [
         ["flex","Whenever I can get funding"]]},
       {k:"goal", t:"select", q:"What is the main goal?", req:true, hint:"This changes the advice a lot, so be honest with yourself here.", opts:[
         ["work","To live and work abroad afterwards"],
-        ["academic","The qualification itself, for teaching, research or promotion"],
-        ["both","Both equally"]]}
+        ["clinical","To practise at a higher level in my profession (advanced practice, specialist)"],
+        ["academic","For research, teaching or promotion"],
+        ["both","Working abroad and the qualification equally"]]}
     ]
   },
   {
@@ -229,6 +233,11 @@ const STEPS = [
         ["3","3 to 5 years"],
         ["5","More than 5 years"]]},
       {k:"role", t:"text", q:"Current or most recent role and employer"},
+      {k:"paid", t:"select", q:"Is that work paid or voluntary?", hint:"Some master's programmes, especially in health professions, only count paid registered practice.", opts:[
+        ["paid","Paid employment"],
+        ["volunteer","Voluntary / unpaid"],
+        ["mix","Some of both"],
+        ["none","Not working at the moment"]]},
       {k:"specialty", t:"text", q:"Any specialty or area you focus on"},
       {k:"research", t:"select", q:"Research output", opts:[
         ["none","None"],
@@ -334,7 +343,8 @@ function yearsNum(v){ return {"0":0,"u1":0.5,"1":1.5,"2":2.5,"3":4,"5":6}[v] ?? 
 
 function schemes(d){
   const held = d.held, lvl = d.wantLevel, yrs = yearsNum(d.workYears);
-  const hasDegree = held === "bachelor" || held === "masters";
+  const studyingBsc = held === "diploma_bsc" || held === "studying_bsc";
+  const hasDegree = held === "bachelor" || held === "masters" || studyingBsc;
   const goodClass = ["first","upper"].includes(d.grade);
   const pgTarget = lvl === "msc" || (lvl === "unsure" && hasDegree);
   const out = [];
@@ -385,6 +395,12 @@ function schemes(d){
       "https://mastercardfdn.org/en/what-we-do/our-programs/mastercard-foundation-scholars-program/", "multi");
   }
 
+  if (pgTarget || lvl === "bsc") {
+    add("Canadian funding works differently", "maybe",
+      "Canada has no large national scholarship for international master's students in the way the UK and Europe do. The money sits at institution and supervisor level: entrance awards, graduate assistantships, and thesis-based programmes where a supervisor pays you from a research grant. That means emailing potential supervisors with your CV and a short research idea before you apply, which is the step most applicants skip and the one that decides whether you get funded.",
+      null, "ca");
+  }
+
   if (held === "diploma" && lvl === "msc") {
     add("Top up at home first", "maybe",
       "The cheapest and fastest route to the fully funded master's schemes above is a post-diploma bachelor's in Ghana. KNUST, Legon and UCC all run them, often part-time alongside work. Finish it with an upper second and the whole list above opens up, including Chevening and Commonwealth.", null, "multi");
@@ -413,6 +429,9 @@ function analyse(d){
     r.notes.push(["A diploma usually cannot go straight to a master's.","Most universities abroad require a bachelor's degree for master's entry. The normal path is to top up your diploma to a bachelor's first, which is often cheaper and faster to do at home. Treat a top-up as step one, not as a detour."]);
   if (held === "diploma" && lvl === "topup")
     r.notes.push(["Top-ups abroad are harder than they look.","Post-diploma top-up programmes abroad often assume you are already registered in that country, especially in regulated fields. Upgrading at home at KNUST, Legon or UCC is usually quicker, far cheaper, and leaves you eligible for the big master's scholarships afterwards."]);
+  if ((held === "diploma_bsc" || held === "studying_bsc") && (lvl === "msc" || lvl === "unsure"))
+    r.notes.push(["Your eligibility depends on finishing the bachelor's in time.",
+      "Scholarships will accept an application while you are still studying, but almost all of them require the degree complete and the transcript issued before the course starts. Work out your graduation date first, then choose the intake, not the other way round. Your final class also decides which schemes stay open, so the grades still ahead of you matter more than the ones behind."]);
   if (held === "wassce" && lvl !== "bsc")
     r.notes.push(["Start with a bachelor's.","With WASSCE only, the bachelor's degree is the entry point. Full scholarships at undergraduate level are much rarer than at master's level, so budget realistically."]);
   if (held === "bachelor" && (lvl === "msc" || lvl === "unsure"))
@@ -436,6 +455,10 @@ function analyse(d){
   const field = ((d.wantField||"") + " " + (d.heldField||""));
   const hit = REGULATED.find(p => p.m.test(field));
   if (hit) r.prof = hit;
+  if (hit && d.goal === "clinical")
+    r.notes.push(["Advanced practice is a licence, not a degree.",
+      "You said the goal is to practise at a higher level. In most countries that status is granted by the local regulator and requires you to already be registered and working there. The Dutch Verpleegkundig Specialist route needs a Dutch employer and BIG registration before you start. Canadian nurse practitioner programmes need Canadian registration and clinical hours. An academic master's abroad, in nursing science or health sciences, is a research degree and does not confer advanced practice. " +
+      "So there are two different plans here. If you want the clinical status, the usual order is register and work in that country first, then train. If you want research, teaching or a route into policy and education, the academic master's is exactly right. Decide which before choosing programmes, because they lead to different places."]);
 
   // blockers, ordered by how much they stop everything else
   if (d.intake === "next6"){
@@ -446,6 +469,15 @@ function analyse(d){
         : "") +
       "Target the September intake after next instead. The European deadlines for it, including Erasmus Mundus, usually fall between December and February, which is the window to work towards."]);
   }
+  if ((d.held === "diploma_bsc" || d.held === "studying_bsc") && !(d.finish||"").trim())
+    r.blockers.push(["Pin down your graduation date",
+      "You are still studying and have not said when you finish. Until that date is known, no intake can be chosen with any confidence, because the degree and transcript normally have to be in hand before the course starts."]);
+  if (d.paid === "volunteer" && r.prof)
+    r.blockers.push(["Get into paid registered practice if you can",
+      "Your experience is voluntary. In regulated professions, several master's programmes count only paid, registered practice towards their entry requirements, and selection panels read paid employment as stronger evidence than volunteering. A year of paid work before you apply can change which programmes will take you."]);
+  if (d.applied === "refused")
+    r.blockers.push(["Declare the previous refusal, every time",
+      "Study permit and visa applications ask directly whether any country has refused you a visa. Answering no when the answer is yes is treated as misrepresentation and can carry a multi-year ban, which is far worse than the refusal itself. Declare it, and make the funding and ties parts of the new application visibly strong, since those are usually what the refusal was about."]);
   if (d.english === "no")
     r.blockers.push(["Sit an English test","Nearly every application and visa needs one, and you cannot be made an offer without it. Book IELTS Academic, or OET if you are in a health profession. This is the single most common reason an application from Ghana stalls."]);
   if (d.english === "booked")
@@ -657,6 +689,7 @@ function summaryText(a, sc){
   L.push("Level: " + lab("held", D.held));
   L.push("Field: " + (D.heldField||"-"));
   L.push("Institution: " + (D.heldInst||"-") + ", " + (D.heldYear||"year not given"));
+  if (D.finish) L.push("Still studying, finishes: " + D.finish);
   L.push("Class: " + lab("grade", D.grade) + (D.cgpa?("; CGPA " + D.cgpa):""));
   if (D.wassce) L.push("WASSCE: " + D.wassce);
   L.push("");
@@ -675,7 +708,7 @@ function summaryText(a, sc){
   L.push("");
   L.push("EXPERIENCE");
   L.push("Years: " + lab("workYears", D.workYears));
-  L.push("Role: " + (D.role||"-"));
+  L.push("Role: " + (D.role||"-") + " [" + lab("paid", D.paid) + "]");
   L.push("Specialty: " + (D.specialty||"-"));
   L.push("Research: " + lab("research", D.research));
   L.push("Leadership: " + (D.leadership||"-"));

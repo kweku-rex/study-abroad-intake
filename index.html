@@ -137,6 +137,10 @@ pre.summary{white-space:pre-wrap;word-break:break-word;background:var(--paper);b
 
 <script>
 "use strict";
+// Paste the Formspree form ID here, e.g. "mwpkabcd" from https://formspree.io/f/mwpkabcd
+// Leave it empty and the send button is hidden, leaving only copy and PDF.
+const FORMSPREE_ID = "mdeayrea";
+
 const KEY = "sa-intake-draft-v1";
 const D = {};          // answers
 let step = 0;
@@ -249,7 +253,7 @@ const STEPS = [
   },
   {
     title: "Money",
-    intro: "Nobody sees these numbers except you and Elvis. They decide which options are realistic, so a rough honest figure is more useful than an optimistic one.",
+    intro: "These go to Elvis only. They decide which options are realistic, so a rough honest figure is more useful than an optimistic one.",
     fields: [
       {k:"contribution", t:"select", q:"What could you or your family contribute per year?", req:true, opts:[
         ["none","Nothing. I need full funding with a living allowance"],
@@ -643,24 +647,78 @@ function renderResults(){
     <p>Scholarship deadlines run months ahead of university deadlines. Chevening and Commonwealth typically close around a year before the course starts, and Erasmus Mundus in the autumn or winter before. Finding a course in March for that September usually means the funding for that intake has already closed. Work backwards from the scholarship date, not the course date.</p></div>`;
 
   html += `<div class="sect noprint"><h2>Send this to Elvis</h2>
-    <p class="muted">Copy the summary below and send it on WhatsApp. He runs the school-by-school research from it: programmes, fees, scholarships and net cost after the award.</p>
-    <pre class="summary" id="sum">${esc(summaryText(a, sc))}</pre>
-    <div class="nav"><button class="primary" id="copy">Copy summary</button>
-      <button class="ghost" id="print">Save as PDF</button>
-      <div class="spacer"></div><button class="ghost" id="edit">Edit answers</button></div></div>`;
+    <p class="muted">He runs the school-by-school research from this: programmes, fees, scholarships and net cost after the award.</p>
+    <pre class="summary" id="sum">${esc(summaryText(a, sc))}</pre>`;
+
+  if (FORMSPREE_ID){
+    html += `<p class="muted">Pressing send delivers exactly the text above to Elvis by email, through the form service Formspree. Nothing is sent until you press it, and nothing else about you is collected.</p>
+      <div id="sendbox"><div class="nav">
+        <button class="primary" id="send">Send to Elvis</button>
+        <button class="ghost" id="copy">Copy instead</button>
+        <div class="spacer"></div><button class="ghost" id="print">Save as PDF</button>
+      </div></div>`;
+  } else {
+    html += `<p class="muted">Copy the summary and send it to him on WhatsApp.</p>
+      <div class="nav"><button class="primary" id="copy">Copy summary</button>
+        <button class="ghost" id="print">Save as PDF</button></div>`;
+  }
+  html += `<div class="nav"><button class="ghost" id="edit">Edit answers</button></div></div>`;
 
   el("app").innerHTML = html;
-  el("copy").onclick = async ()=>{
-    const t = el("sum").textContent;
-    try{ await navigator.clipboard.writeText(t); toast("Summary copied"); }
-    catch(e){
-      const r = document.createRange(); r.selectNodeContents(el("sum"));
-      const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Select and copy the text");
-    }
-  };
+  el("copy").onclick = copySummary;
   el("print").onclick = ()=>window.print();
   el("edit").onclick = ()=>{ step = 1; renderStep(); };
+  const sendBtn = el("send");
+  if (sendBtn) sendBtn.onclick = ()=>submit(sendBtn);
   window.scrollTo(0,0);
+}
+
+async function submit(btn){
+  const box = el("sendbox");
+  btn.disabled = true;
+  const original = btn.textContent;
+  btn.textContent = "Sending...";
+  try {
+    const res = await fetch("https://formspree.io/f/" + FORMSPREE_ID, {
+      method: "POST",
+      headers: {"Content-Type":"application/json","Accept":"application/json"},
+      body: JSON.stringify({
+        name: D.name || "(no name given)",
+        contact: D.contact || "(no contact given)",
+        field: (D.wantField||"") + " / " + (D.wantLevel||""),
+        summary: el("sum").textContent,
+        _subject: "Study abroad intake: " + (D.name || "unnamed"),
+        _gotcha: ""
+      })
+    });
+    if (!res.ok) throw new Error("status " + res.status);
+    box.innerHTML = `<div class="alert note"><h3>Sent</h3>
+      <p>Elvis has it. He will come back to you with the schools and funding.
+      Save a copy for yourself with the button below, since this page does not keep one.</p>
+      <div class="nav"><button class="ghost" id="print2">Save as PDF</button>
+      <button class="ghost" id="copy2">Copy the summary</button></div></div>`;
+    el("print2").onclick = ()=>window.print();
+    el("copy2").onclick = ()=>copySummary();
+    try{ localStorage.removeItem(KEY); }catch(e){}
+  } catch(err){
+    btn.disabled = false;
+    btn.textContent = original;
+    const warn = document.createElement("div");
+    warn.className = "alert warn";
+    warn.innerHTML = `<h3>That did not go through</h3>
+      <p>It may be your connection, or the form service being down. Nothing was lost.
+      Press "Copy instead", then paste it to Elvis on WhatsApp. You can also try send again.</p>`;
+    box.appendChild(warn);
+  }
+}
+
+async function copySummary(){
+  const t = el("sum") ? el("sum").textContent : "";
+  try{ await navigator.clipboard.writeText(t); toast("Summary copied"); }
+  catch(e){
+    const r = document.createRange(); r.selectNodeContents(el("sum"));
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Select and copy the text");
+  }
 }
 
 function toast(msg){

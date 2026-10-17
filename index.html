@@ -277,13 +277,21 @@ const STEPS = [
   {
     title: "Where you want to go",
     fields: [
-      {k:"regions", t:"chips", q:"Which places interest you?", hint:"Pick as many as you like.", opts:[
-        ["uk","United Kingdom"],["us","United States"],["ca","Canada"],
-        ["eu","Continental Europe"],["any","Open to anywhere"]]},
+      {k:"regions", t:"chips", q:"Which parts of the world interest you?", hint:"Pick as many as you like. If you are not sure, choose 'Open to anywhere' and let the results suggest.", opts:[
+        ["any","Open to anywhere"],
+        ["uk","United Kingdom"],["ie","Ireland"],["eu","Continental Europe"],
+        ["ca","Canada"],["us","United States"],
+        ["au","Australia"],["nz","New Zealand"],
+        ["asia","Asia (China, Japan, Korea, Taiwan, Malaysia)"],
+        ["tr","Türkiye"],["gulf","Gulf states"],["africa","Within Africa"]]},
       {k:"exclude", t:"text", q:"Anywhere you would rule out?"},
-      {k:"language", t:"select", q:"Language of study", opts:[
-        ["en","English only"],
-        ["learn","I would learn another language if the funding is good"]]},
+      {k:"langSpoken", t:"chips", q:"Which of these do you already speak well?", hint:"Well enough to study or work in, not a few words.", opts:[
+        ["none","English only"],["fr","French"],["de","German"],["nl","Dutch"],
+        ["es","Spanish"],["pt","Portuguese"],["ar","Arabic"],["other","Another one"]]},
+      {k:"langLearn", t:"select", q:"Would you learn a new language if the funding were good?", hint:"Be realistic. Reaching the level needed to work in a hospital or office usually takes one to two years of serious study.", opts:[
+        ["no","No, English-taught and English-speaking only"],
+        ["study","Yes, enough to study"],
+        ["work","Yes, including to the level needed to work there"]]},
       {k:"optimise", t:"select", q:"If you had to choose one thing to optimise for", req:true, opts:[
         ["cost","Lowest cost to me"],
         ["work","Best chance of working there afterwards"],
@@ -326,13 +334,174 @@ const REGULATED = [
 ];
 
 /* ---------- scholarship rules ---------- */
+/* ---------- destinations ----------
+   Qualitative attributes only. No fees, deadlines or visa amounts live here,
+   because those go stale between intakes and must be checked on the official
+   source each time. Every entry carries a verify link instead.
+   workEn: can a graduate work there in English?
+     "yes"   - English is the working language
+     "prof"  - fine for most jobs, but regulated professions need the local language
+     "local" - you need the local language to work at all
+   fund:  strength of funding routes open to a Ghanaian applicant, 0-3
+   psw:   post-study work rights, 0-3
+   cost:  cost if NOT funded, 0-3 where 3 is cheapest
+-------------------------------------- */
+const DEST = [
+  {c:"ie", r:"ie", n:"Ireland", workEn:"yes", taught:"all", fund:1, psw:3, cost:1,
+   why:"English throughout, in the EU, and health professionals register without a language exam.",
+   check:"Funding is mostly institution-level and partial, so budget for a real contribution.",
+   url:"https://www.educationinireland.com/"},
+  {c:"uk", r:"uk", n:"United Kingdom", workEn:"yes", taught:"all", fund:3, psw:2, cost:0,
+   why:"The strongest fully funded schemes for Ghanaians sit here: Chevening and Commonwealth.",
+   check:"Graduate Route length and dependant rules have changed repeatedly. Confirm on GOV.UK.",
+   url:"https://www.gov.uk/student-visa"},
+  {c:"ca", r:"ca", n:"Canada", workEn:"yes", taught:"all", fund:1, psw:2, cost:1,
+   why:"English-speaking outside Quebec, with a well-trodden route from study into work.",
+   check:"Intake caps, provincial attestation and PGWP eligibility have all changed recently. Confirm per programme on canada.ca. Regulated professions need the provincial licence, which is an exam rather than a language barrier. Quebec is the exception, where French is required.",
+   url:"https://www.canada.ca/en/immigration-refugees-citizenship.html"},
+  {c:"us", r:"us", n:"United States", workEn:"yes", taught:"all", fund:2, psw:2, cost:0,
+   why:"Assistantships and departmental funding can cover a lot, and STEM fields get longer work rights.",
+   check:"Expensive without an assistantship, and a previous refusal makes the next interview harder.",
+   url:"https://educationusa.state.gov/"},
+  {c:"au", r:"au", n:"Australia", workEn:"yes", taught:"all", fund:2, psw:3, cost:0,
+   why:"English-speaking, generous post-study work rights, and active recruitment of nurses and midwives.",
+   check:"High tuition and living costs. Australia Awards eligibility varies by country, so confirm Ghana is included. Nurses and midwives register through AHPRA, which is an assessment process rather than a language exam for English speakers.",
+   url:"https://www.studyaustralia.gov.au/"},
+  {c:"nz", r:"nz", n:"New Zealand", workEn:"yes", taught:"all", fund:1, psw:3, cost:1,
+   why:"English-speaking with straightforward post-study work rights and demand for health workers.",
+   check:"Fewer scholarships than Australia. Check whether Manaaki Scholarships cover Ghana.",
+   url:"https://www.studywithnewzealand.govt.nz/"},
+  {c:"nl", r:"eu", n:"Netherlands", workEn:"prof", taught:"wide", fund:2, psw:2, cost:1,
+   why:"One of the widest ranges of English-taught master's in Europe, plus a post-study job-search year.",
+   check:"Healthcare work needs Dutch and BIG registration. Fine for research and policy, hard for clinical roles.",
+   url:"https://www.studyinnl.org/"},
+  {c:"de", r:"eu", n:"Germany", workEn:"local", taught:"wide", fund:3, psw:2, cost:3,
+   why:"Little or no tuition at public universities even for non-EU students, and DAAD funds professionals from developing countries.",
+   check:"A blocked account is required for the visa, and working in healthcare needs German at a high level.",
+   url:"https://www.daad.de/en/"},
+  {c:"se", r:"eu", n:"Sweden", workEn:"prof", taught:"wide", fund:2, psw:2, cost:1,
+   why:"English-taught master's are common and Swedish Institute scholarships are fully funded.",
+   check:"High living costs, and healthcare roles require Swedish.",
+   url:"https://studyinsweden.se/"},
+  {c:"no", r:"eu", n:"Norway", workEn:"local", taught:"some", fund:1, psw:2, cost:3,
+   why:"Public universities have historically charged little or no tuition, though this has been changing.",
+   check:"Confirm the current tuition position for non-EU students before counting on it. Living costs are very high.",
+   url:"https://www.studyinnorway.no/"},
+  {c:"hu", r:"eu", n:"Hungary", workEn:"local", taught:"wide", fund:3, psw:1, cost:3,
+   why:"Stipendium Hungaricum is fully funded with a stipend and is one of the most accessible routes for African applicants.",
+   check:"Confirm Ghana is a current partner country, since the list changes year to year.",
+   url:"https://stipendiumhungaricum.hu/"},
+  {c:"fr", r:"eu", n:"France", workEn:"local", taught:"some", fund:2, psw:2, cost:2,
+   why:"Low public tuition and the Eiffel Excellence scholarship for international students.",
+   check:"Many programmes are taught in French. Check language of instruction per course.",
+   url:"https://www.campusfrance.org/en"},
+  {c:"be", r:"eu", n:"Belgium", workEn:"local", taught:"some", fund:2, psw:2, cost:2,
+   why:"VLIR-UOS and ARES scholarships are aimed squarely at applicants from developing countries.",
+   check:"Dutch or French needed for most work. Check which language your programme uses.",
+   url:"https://www.vliruos.be/"},
+  {c:"cn", r:"asia", n:"China", workEn:"local", taught:"wide", fund:3, psw:1, cost:3,
+   why:"Chinese Government Scholarships are fully funded with a stipend and are widely awarded to Ghanaian students.",
+   check:"Staying on to work afterwards is harder than in the West, and Mandarin is needed for most roles.",
+   url:"https://www.campuschina.org/"},
+  {c:"kr", r:"asia", n:"South Korea", workEn:"local", taught:"some", fund:3, psw:1, cost:3,
+   why:"The Global Korea Scholarship is fully funded and includes a year of language training.",
+   check:"Competitive, and most graduate roles need Korean.",
+   url:"https://www.studyinkorea.go.kr/"},
+  {c:"jp", r:"asia", n:"Japan", workEn:"local", taught:"some", fund:3, psw:2, cost:3,
+   why:"MEXT scholarships are fully funded and cover travel, tuition and living costs.",
+   check:"Application usually runs through the embassy with early deadlines. Japanese needed for most work.",
+   url:"https://www.studyinjapan.go.jp/en/"},
+  {c:"tw", r:"asia", n:"Taiwan", workEn:"local", taught:"wide", fund:3, psw:1, cost:3,
+   why:"TaiwanICDF scholarships are fully funded and specifically target partner developing countries.",
+   check:"Confirm Ghana is on the current partner list.",
+   url:"https://www.icdf.org.tw/"},
+  {c:"my", r:"asia", n:"Malaysia", workEn:"prof", taught:"all", fund:1, psw:1, cost:3,
+   why:"English-taught throughout and among the cheapest options anywhere for tuition and living.",
+   check:"Few large scholarships, and post-study work rights are limited.",
+   url:"https://educationmalaysia.gov.my/"},
+  {c:"tr", r:"tr", n:"Türkiye", workEn:"local", taught:"some", fund:3, psw:1, cost:3,
+   why:"Türkiye Bursları is fully funded, covers accommodation and a stipend, and includes a year of Turkish.",
+   check:"Highly competitive, and Turkish is needed for most work afterwards.",
+   url:"https://turkiyeburslari.gov.tr/"},
+  {c:"za", r:"africa", n:"South Africa", workEn:"yes", taught:"all", fund:2, psw:1, cost:2,
+   why:"English-speaking, strong public health and nursing faculties, and far cheaper than the West.",
+   check:"Work permits after study are difficult. Best if you plan to return home.",
+   url:"https://www.dhet.gov.za/"},
+  {c:"rw", r:"africa", n:"Rwanda", workEn:"yes", taught:"all", fund:2, psw:1, cost:3,
+   why:"English-speaking, and Mastercard Foundation funds students at partner institutions here.",
+   check:"Narrower programme range. Strongest for global health and development fields.",
+   url:"https://mastercardfdn.org/"},
+  {c:"qa", r:"gulf", n:"Qatar", workEn:"yes", taught:"all", fund:2, psw:1, cost:2,
+   why:"English-speaking universities, several with branch campuses of well-known institutions.",
+   check:"Residency is tied to employment, so there is no settlement route. Good for earning, not for staying.",
+   url:"https://www.qf.org.qa/"}
+];
+
+function rankDestinations(d, prof){
+  const picks = Array.isArray(d.regions) ? d.regions : [];
+  const openToAll = !picks.length || picks.includes("any");
+  const spoken = Array.isArray(d.langSpoken) ? d.langSpoken : [];
+  const willLearn = d.langLearn || "study";
+  const wantsWork = d.goal === "work" || d.goal === "both" || d.goal === "clinical" || d.optimise === "work";
+  const excl = (d.exclude||"").toLowerCase();
+
+  return DEST.map(x=>{
+    let s = 0;
+    const notes = [];
+
+    // language, weighted by whether they intend to work there
+    const localOk = spoken.some(l => ["fr","de","nl","es","pt"].includes(l) && (
+      (l==="fr" && ["fr","be","ca"].includes(x.c)) ||
+      (l==="de" && x.c==="de") ||
+      (l==="nl" && ["nl","be"].includes(x.c)) ));
+    if (x.workEn === "yes"){
+      s += 30;
+      if (prof && wantsWork) notes.push("No language barrier to registering in your profession here, which is the main thing that rules places out.");
+    }
+    else if (x.workEn === "prof"){
+      s += prof && wantsWork ? 12 : 24;
+      if (prof && wantsWork) notes.push("Your profession is regulated, and registering to practise here needs the local language even though the course is in English.");
+    } else {
+      if (localOk){ s += 26; notes.push("You already speak the language, which removes the usual barrier here."); }
+      else if (!wantsWork){ s += 18; }
+      else if (willLearn === "work"){ s += 10; notes.push("Working here means reaching a professional level in the local language, usually one to two years of study."); }
+      else if (willLearn === "study"){ s += 4; notes.push("Studying in English is possible, but you said you would not learn the language to working level, which blocks the job afterwards."); }
+      else { s += 0; notes.push("Ruled out by your English-only answer if you intend to work here."); }
+    }
+
+    // funding, weighted up when they can contribute little
+    const needsFunding = d.contribution === "none" || d.contribution === "small";
+    s += x.fund * (needsFunding ? 8 : 5);
+
+    // post-study work
+    s += x.psw * (d.optimise === "work" ? 7 : 4);
+
+    // cost if unfunded
+    s += x.cost * (d.optimise === "cost" ? 5 : 2);
+
+    // their own stated preference
+    if (!openToAll && picks.includes(x.r)) s += 10;
+    if (!openToAll && !picks.includes(x.r)) notes.push("Outside the regions you picked.");
+
+    // previous refusal
+    if (d.applied === "refused" && x.c === "us"){
+      s -= 10;
+      notes.push("You have been refused a US visa before, which makes the next application harder, not impossible.");
+    }
+
+    const ruledOut = excl && excl.split(/[,;]+/).some(w => w.trim() && x.n.toLowerCase().includes(w.trim()));
+    return {...x, score: Math.max(0, Math.round(s)), notes, ruledOut,
+            offPref: !openToAll && !picks.includes(x.r)};
+  }).filter(x=>!x.ruledOut).sort((a,b)=>b.score-a.score);
+}
+
 function inRegion(d, r){
   const picks = Array.isArray(d.regions) ? d.regions : [];
   if (!r || r === "multi") return true;
   if (!picks.length || picks.includes("any")) return true;
   return picks.includes(r);
 }
-const REGION_NAME = {uk:"the United Kingdom", us:"the United States", ca:"Canada", eu:"continental Europe"};
+const REGION_NAME = {uk:"the United Kingdom", us:"the United States", ca:"Canada", eu:"continental Europe", ie:"Ireland", au:"Australia", nz:"New Zealand", asia:"Asia", tr:"Türkiye", gulf:"the Gulf", africa:"Africa"};
 
 function sameField(a, b){
   const n = s => String(s||"").toLowerCase().replace(/[^a-z]/g,"");
@@ -619,10 +788,28 @@ function renderResults(){
   const picked = (Array.isArray(D.regions)?D.regions:[]).filter(x=>x!=="any");
   const pickedText = picked.map(x=>REGION_NAME[x]||x).join(" and ");
 
+  const ranked = rankDestinations(D, a.prof);
+  const top = ranked.slice(0, 6), rest = ranked.slice(6);
+  const best = top[0] ? top[0].score : 1;
+  const band = s => s >= best * 0.85 ? "yes" : s >= best * 0.6 ? "maybe" : "no";
+
+  html += `<div class="sect"><h2>Where to aim</h2>
+    <p class="muted">Ranked against what you told us: what you want from it, what you can pay, what languages you have, and whether you need to work there afterwards. These are suggestions, not a verdict. Read the reasons and pick for yourself.</p>`;
+  top.forEach((x,i)=>{
+    html += `<div class="verdict ${band(x.score)}"><h3>${i+1}. ${esc(x.n)}
+      <span class="tag ${band(x.score)}">${x.offPref ? "Outside your pick" : i===0 ? "Best fit" : "Worth a look"}</span></h3>
+      <p>${x.why}</p>
+      ${x.notes.map(n=>`<p><strong>${esc(n)}</strong></p>`).join("")}
+      <p>Check: ${x.check}</p>
+      <p><a href="${x.url}" target="_blank" rel="noopener">Official source</a></p></div>`;
+  });
+  if (rest.length) html += `<p class="muted">Also considered and ranked lower: ${esc(rest.map(x=>x.n).join(", "))}.</p>`;
+  html += `</div>`;
+
   html += `<div class="sect"><h2>Funding you can apply for</h2>`;
   if (picked.length) html += `<p class="muted">In ${esc(pickedText)}, which is what you chose.</p>`;
   if (yes.length) html += yes.map(card).join("");
-  else html += `<p class="muted">Nothing in the major schemes matches your profile cleanly here. The items below show why, and what would change that.</p>`;
+  else html += `<p class="muted">None of the big named schemes below match your profile in the places you chose. That does not mean there is no money: several destinations ranked above carry their own national scholarship, named on their card with a link. Start there.</p>`;
   if (maybe.length) html += maybe.map(card).join("");
   if (no.length) html += `<h3 style="margin-top:1.2rem;font-size:1rem">Not open to you right now</h3>` + no.map(card).join("");
   html += `<p class="muted">Eligibility rules and deadlines change every cycle. Confirm each one on the scheme's own site before relying on it.</p></div>`;
@@ -768,7 +955,8 @@ function summaryText(a, sc){
   L.push("Optimise for: " + lab("optimise", D.optimise));
   L.push("Regions: " + ((D.regions||[]).map(r=>lab("regions",r)).join(", ") || "not given") +
          (D.exclude?("; rules out " + D.exclude):""));
-  L.push("Language: " + lab("language", D.language));
+  L.push("Speaks: " + ((D.langSpoken||[]).map(x=>lab("langSpoken",x)).join(", ") || "not given"));
+  L.push("Willing to learn: " + lab("langLearn", D.langLearn));
   L.push("");
   L.push("ENGLISH");
   L.push(lab("english", D.english) + (D.englishScore?(" — " + D.englishScore):"") + (D.englishDate?(", " + D.englishDate):""));
@@ -794,6 +982,8 @@ function summaryText(a, sc){
   L.push("SCREENING RESULT");
   if (a.prof) L.push("Regulated profession: " + a.prof.name + " — licensing is separate from the degree.");
   a.notes.forEach(n => L.push("Flag: " + n[0]));
+  const rk = rankDestinations(D, a.prof).slice(0,6);
+  L.push("Suggested destinations (ranked): " + rk.map(x=>x.n + " " + x.score).join(", "));
   const inR = sc.filter(s=>inRegion(D,s.region));
   const yes = inR.filter(s=>s.v==="yes").map(s=>s.name);
   const maybe = inR.filter(s=>s.v==="maybe").map(s=>s.name);
